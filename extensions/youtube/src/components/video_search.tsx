@@ -6,7 +6,7 @@ import { getErrorMessage } from "../lib/utils";
 import { getVideos, searchVideos, useRefresher, Video } from "../lib/youtubeapi";
 import { FilterDropdown } from "./dropdown";
 import { ListOrGrid, ListOrGridEmptyView, ListOrGridSection } from "./listgrid";
-import { getPinnedVideos, getRecentVideos } from "./recent_videos";
+import { getPinnedLiveVideos, getPinnedVideos, getRecentLiveVideos, getRecentVideos } from "./recent_videos";
 import { VideoItem } from "./video";
 
 export function SearchVideoList({
@@ -14,11 +14,13 @@ export function SearchVideoList({
   searchQuery,
   searchOptions,
   emptyViewTitle = "Type to search videos",
+  useLiveStorage = false,
 }: {
   channelId?: string;
   searchQuery?: string | undefined;
   searchOptions?: { order?: string; eventType?: "live" | "completed" | "upcoming" };
   emptyViewTitle?: string;
+  useLiveStorage?: boolean;
 }) {
   const { griditemsize, showRecentVideos } = getPreferenceValues<Preferences>();
   const [searchText, setSearchText] = useState<string>(searchQuery || "");
@@ -43,9 +45,9 @@ export function SearchVideoList({
   useEffect(() => {
     (async () => {
       try {
-        const pinnedVideos = await getVideos(await getPinnedVideos());
+        const pinnedVideos = await getVideos(await (useLiveStorage ? getPinnedLiveVideos() : getPinnedVideos()));
         setPinnedVideos(pinnedVideos.filter((v) => !channelId || v.channelId === channelId));
-        const recentVideos = await getVideos(await getRecentVideos());
+        const recentVideos = await getVideos(await (useLiveStorage ? getRecentLiveVideos() : getRecentVideos()));
         setRecentVideos(recentVideos.filter((v) => !channelId || v.channelId === channelId));
       } catch (error) {
         showToast(Toast.Style.Failure, "Could Not Load Recent/Pinned Videos", getErrorMessage(error));
@@ -53,7 +55,7 @@ export function SearchVideoList({
         setLoading(false);
       }
     })();
-  }, [state]);
+  }, [state, useLiveStorage]);
 
   return hasQuery ? (
     data && data.length > 0 ? (
@@ -66,7 +68,7 @@ export function SearchVideoList({
         throttle={true}
       >
         {data.map((v) => (
-          <VideoItem key={v.id} video={v} refresh={refresh} />
+          <VideoItem key={v.id} video={v} refresh={refresh} useLiveStorage={useLiveStorage} />
         ))}
       </ListOrGrid>
     ) : // While searching but without results yet, keep showing the recent/pinned view
@@ -83,13 +85,13 @@ export function SearchVideoList({
         )}
         <ListOrGridSection title="Pinned Videos">
           {pinnedVideos.map((v: Video) => (
-            <VideoItem key={v.id} video={v} refresh={refresh} pinned />
+            <VideoItem key={v.id} video={v} refresh={refresh} pinned useLiveStorage={useLiveStorage} />
           ))}
         </ListOrGridSection>
         {showRecentVideos && (
           <ListOrGridSection title="Recent Videos">
             {recentVideos.map((v: Video) => (
-              <VideoItem key={v.id} video={v} refresh={refresh} recent />
+              <VideoItem key={v.id} video={v} refresh={refresh} recent useLiveStorage={useLiveStorage} />
             ))}
           </ListOrGridSection>
         )}
@@ -110,13 +112,13 @@ export function SearchVideoList({
       )}
       <ListOrGridSection title="Pinned Videos">
         {pinnedVideos.map((v: Video) => (
-          <VideoItem key={v.id} video={v} refresh={refresh} pinned />
+          <VideoItem key={v.id} video={v} refresh={refresh} pinned useLiveStorage={useLiveStorage} />
         ))}
       </ListOrGridSection>
       {showRecentVideos && (
         <ListOrGridSection title="Recent Videos">
           {recentVideos.map((v: Video) => (
-            <VideoItem key={v.id} video={v} refresh={refresh} recent />
+            <VideoItem key={v.id} video={v} refresh={refresh} recent useLiveStorage={useLiveStorage} />
           ))}
         </ListOrGridSection>
       )}

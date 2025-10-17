@@ -7,42 +7,53 @@ import { compactNumberFormat, formatDate } from "../lib/utils";
 import { Video } from "../lib/youtubeapi";
 import { OpenChannelInBrowser } from "./actions";
 import { ChannelItemDetailFetched } from "./channel";
-import { PinVideo, PinnedVideoActions, RecentVideoActions, addRecentVideo } from "./recent_videos";
+import { PinVideo, PinnedVideoActions, RecentVideoActions, addRecentLiveVideo, addRecentVideo } from "./recent_videos";
 
 export interface VideoActionProps {
   video: Video;
   refresh?: () => void;
+  useLiveStorage?: boolean;
 }
 
 function videoUrl(videoId: string) {
   return `https://youtube.com/watch?v=${videoId}`;
 }
 
-function CopyVideoUrlAction({ video, refresh }: VideoActionProps) {
+function CopyVideoUrlAction({ video, refresh, useLiveStorage }: VideoActionProps) {
   return (
     <Action.CopyToClipboard
       title="Copy Video URL"
       content={videoUrl(video.id)}
       shortcut={{ modifiers: ["cmd", "opt"], key: "c" }}
       onCopy={() => {
-        addRecentVideo(video.id);
+        if (useLiveStorage) {
+          addRecentLiveVideo(video.id);
+        } else {
+          addRecentVideo(video.id);
+        }
         if (refresh) refresh();
       }}
     />
   );
 }
 
-function OpenVideoInBrowser({ video }: VideoActionProps) {
+function OpenVideoInBrowser({ video, useLiveStorage }: VideoActionProps) {
   return (
     <Action.OpenInBrowser
       title="Open Video in Browser"
       url={videoUrl(video.id)}
-      onOpen={() => addRecentVideo(video.id)}
+      onOpen={() => {
+        if (useLiveStorage) {
+          addRecentLiveVideo(video.id);
+        } else {
+          addRecentVideo(video.id);
+        }
+      }}
     />
   );
 }
 
-function OpenWithIINAAction({ video, refresh }: VideoActionProps) {
+function OpenWithIINAAction({ video, refresh, useLiveStorage }: VideoActionProps) {
   const appPath = "/Applications/IINA.app";
   if (fs.existsSync(appPath)) {
     return (
@@ -54,7 +65,11 @@ function OpenWithIINAAction({ video, refresh }: VideoActionProps) {
         shortcut={{ modifiers: ["cmd", "shift"], key: "i" }}
         onOpen={() => {
           showHUD("Open IINA");
-          addRecentVideo(video.id);
+          if (useLiveStorage) {
+            addRecentLiveVideo(video.id);
+          } else {
+            addRecentVideo(video.id);
+          }
           if (refresh) refresh();
         }}
       />
@@ -64,14 +79,18 @@ function OpenWithIINAAction({ video, refresh }: VideoActionProps) {
 }
 
 function ShowVideoDetails(props: VideoActionProps) {
-  const { video, refresh } = props;
+  const { video, refresh, useLiveStorage } = props;
   return (
     <Action.Push
       title="Show Details"
       target={<VideoItemDetail {...props} />}
       icon={{ source: Icon.List, tintColor: Color.PrimaryText }}
       onPush={() => {
-        addRecentVideo(video.id);
+        if (useLiveStorage) {
+          addRecentLiveVideo(video.id);
+        } else {
+          addRecentVideo(video.id);
+        }
         if (refresh) refresh();
       }}
     />
@@ -144,6 +163,7 @@ interface VideoItemProps {
   refresh?: () => void;
   pinned?: boolean;
   recent?: boolean;
+  useLiveStorage?: boolean;
 }
 
 export function VideoItem(props: VideoItemProps) {

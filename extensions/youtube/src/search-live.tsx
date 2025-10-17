@@ -9,6 +9,7 @@ export default function SearchLive(
       searchQuery={props.arguments.query ?? props.fallbackText}
       searchOptions={{ eventType: "live" }}
       emptyViewTitle="Type to find what's streaming now"
+      useLiveStorage={true}
     />
   );
 }
