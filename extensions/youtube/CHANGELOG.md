@@ -4,7 +4,7 @@
 
 - Added new `Search Live Streams` command to search for live YouTube broadcasts
 - Improved empty view messages with more engaging copy for `Search Videos` and `Search Channels` commands
-- Updated icons for `Remove Pinned Videos` and `Remove from Pinned Channels` actions
+- Updated icons for `Remove from Pinned Videos` and `Remove from Pinned Channels` actions
 
 ## [Chore: Updated README] - 2025-10-17
 
