@@ -47,6 +47,7 @@ Raycast extension to search YouTube videos, channels, and more.
 
 - Search Videos
 - Search Channels
+- Search Live Streams
 - Popular Videos
 
 and more
