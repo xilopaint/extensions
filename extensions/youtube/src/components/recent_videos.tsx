@@ -4,11 +4,11 @@ import {
   Alert,
   Color,
   Icon,
+  LocalStorage,
   Toast,
   confirmAlert,
   getPreferenceValues,
   showToast,
-  LocalStorage,
 } from "@raycast/api";
 import { Preferences } from "../lib/types";
 import { VideoActionProps } from "./video";
@@ -61,12 +61,12 @@ const handleClearRecentVideos = async (refresh?: () => void) => {
 
   if (confirmed) {
     clearRecentVideos();
-    showToast(Toast.Style.Success, "Cleared All Recent Videos");
+    showToast(Toast.Style.Success, "Cleared all Recent Videos");
     if (refresh) refresh();
   }
 };
 
-export const PinVideo = ({ video, refresh }: VideoActionProps): JSX.Element => {
+export const PinVideo = ({ video, refresh }: VideoActionProps) => {
   return (
     <Action
       title="Pin Video"
@@ -90,7 +90,7 @@ export const PinnedVideoActions = ({ video, refresh }: VideoActionProps) => (
         showToast(Toast.Style.Success, "Removed from Pinned Videos");
         if (refresh) refresh();
       }}
-      icon={Icon.XMarkCircle}
+      icon={Icon.PinDisabled}
       style={Action.Style.Destructive}
       shortcut={{ modifiers: ["ctrl"], key: "x" }}
     />
@@ -98,7 +98,7 @@ export const PinnedVideoActions = ({ video, refresh }: VideoActionProps) => (
       title="Clear All Pinned Videos"
       onAction={() => {
         clearPinnedVideos();
-        showToast(Toast.Style.Success, "Cleared All Pinned Videos");
+        showToast(Toast.Style.Success, "Cleared all Pinned Videos");
         if (refresh) refresh();
       }}
       icon={Icon.Trash}

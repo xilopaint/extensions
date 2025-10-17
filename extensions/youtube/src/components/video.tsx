@@ -42,7 +42,7 @@ function OpenVideoInBrowser({ video }: VideoActionProps) {
   );
 }
 
-function OpenWithIINAAction({ video, refresh }: VideoActionProps): JSX.Element | null {
+function OpenWithIINAAction({ video, refresh }: VideoActionProps) {
   const appPath = "/Applications/IINA.app";
   if (fs.existsSync(appPath)) {
     return (
@@ -89,7 +89,7 @@ function ShowChannelAction(props: { channelId: string }) {
   );
 }
 
-export function VideoItemDetail(props: VideoActionProps): JSX.Element {
+export function VideoItemDetail(props: VideoActionProps) {
   const { video } = props;
   const statistics = video.statistics;
   const desc = video.description || "No description";
@@ -146,7 +146,7 @@ interface VideoItemProps {
   recent?: boolean;
 }
 
-export function VideoItem(props: VideoItemProps): JSX.Element {
+export function VideoItem(props: VideoItemProps) {
   const { view, primaryaction } = getPreferenceValues<Preferences>();
   const { video } = props;
   let parts: string[] = [];
@@ -156,7 +156,7 @@ export function VideoItem(props: VideoItemProps): JSX.Element {
   const thumbnail = video.thumbnails?.high?.url || "";
   const title = he.decode(video.title);
 
-  const Actions = (): JSX.Element => {
+  const Actions = () => {
     const showDetail = <ShowVideoDetails {...props} />;
     const openBrowser = <OpenVideoInBrowser {...props} />;
     return (
