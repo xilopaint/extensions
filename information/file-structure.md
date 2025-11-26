@@ -14,8 +14,8 @@ extension
 ├── .prettierrc
 ├── assets
 │   └── icon.png
-├── node_modules
 ├── eslint.config.js
+├── node_modules
 ├── package-lock.json
 ├── package.json
 ├── src
