@@ -95,7 +95,7 @@
       "mode": "no-view"
     },
     {
-      "name": "search-google-drive",
+      "name": "search-google-drive-files",
       "title": "Search Google Drive",
       "description": "Search files in your Google Drive",
       "icon": "google-drive.png",
