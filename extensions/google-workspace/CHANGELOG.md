@@ -1,6 +1,6 @@
 # Google Workspace Changelog
 
-## [Hierarchical Navigation] - {PR_MERGE_DATE}
+## [Hierarchical Navigation] - 2026-01-05
 
 ### Changed
 
