@@ -1,5 +1,11 @@
 # Mollie Changelog
 
+## [Initial Release] - 2026-01-26
+
+### Fixed
+
+- Fixed TypeScript type errors for strict type checking
+
 ## [Initial Release] - 2026-01-24
 
 First launch of Mollie for Raycast.

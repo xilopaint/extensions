@@ -56,6 +56,11 @@ interface PaginatedCustomers {
   };
 }
 
+interface MollieErrorResponse {
+  detail?: string;
+  title?: string;
+}
+
 // Helper to format currency
 const formatCurrency = (value: string, currency: string) => {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(parseFloat(value));
@@ -145,7 +150,7 @@ function SubscriptionsList({ accessToken }: { accessToken: string }) {
         });
 
         if (response.ok) {
-          const customersData: PaginatedCustomers = await response.json();
+          const customersData = (await response.json()) as PaginatedCustomers;
           const map = new Map<string, Customer>();
           customersData._embedded?.customers?.forEach((customer) => {
             map.set(customer.id, customer);
@@ -194,7 +199,7 @@ function SubscriptionsList({ accessToken }: { accessToken: string }) {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as MollieErrorResponse;
         throw new Error(errorData.detail || errorData.title || `HTTP error! Status: ${response.status}`);
       }
 

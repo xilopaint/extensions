@@ -30,6 +30,11 @@ interface PaginatedPayments {
   };
 }
 
+interface MollieErrorResponse {
+  detail?: string;
+  title?: string;
+}
+
 // Helper to format currency
 const formatCurrency = (value: string, currency: string) => {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(parseFloat(value));
@@ -267,7 +272,7 @@ function PaymentsList({ accessToken }: { accessToken: string }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as MollieErrorResponse;
         throw new Error(errorData.detail || errorData.title || `HTTP error! Status: ${response.status}`);
       }
 
