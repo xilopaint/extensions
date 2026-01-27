@@ -14,7 +14,11 @@ import { useState, useEffect } from "react";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { captureContext, CapturedContext } from "./lib/context-capture";
-import { executePrompt, ClaudeResponse } from "./lib/claude-cli";
+import {
+  executePrompt,
+  ClaudeResponse,
+  ensureClaudeInstalled,
+} from "./lib/claude-cli";
 import { launchClaudeCode } from "./lib/terminal";
 
 const execPromise = promisify(exec);
@@ -115,6 +119,13 @@ export default function GitActions() {
 
   useEffect(() => {
     async function init() {
+      // Check if Claude is installed first
+      const claudeInstalled = await ensureClaudeInstalled();
+      if (!claudeInstalled) {
+        setIsLoading(false);
+        return;
+      }
+
       const ctx = await captureContext();
       setContext(ctx);
 

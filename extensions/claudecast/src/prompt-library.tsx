@@ -13,6 +13,7 @@ import {
   getPreferenceValues,
 } from "@raycast/api";
 import React, { useState, useEffect } from "react";
+import { existsSync, mkdirSync } from "fs";
 import {
   getAllPrompts,
   PromptTemplate,
@@ -23,9 +24,13 @@ import {
   incrementUsageCount,
   deleteCustomPrompt,
 } from "./lib/prompts";
-import { executePrompt, ClaudeResponse } from "./lib/claude-cli";
+import {
+  executePrompt,
+  ClaudeResponse,
+  ensureClaudeInstalled,
+} from "./lib/claude-cli";
 import { captureContext, getCodeContext } from "./lib/context-capture";
-import { launchClaudeCode } from "./lib/terminal";
+import { launchClaudeCode, launchRalphFreshLoop } from "./lib/terminal";
 
 const CATEGORIES: PromptCategory[] = [
   "planning",
@@ -201,11 +206,21 @@ function PromptItem({
   }
 
   async function runInTerminal(variables: Record<string, string> = {}) {
+    if (!(await ensureClaudeInstalled())) return;
     const context = await captureContext();
+    const targetPath = variables.projectPath || context.projectPath;
+    if (targetPath && !existsSync(targetPath)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: targetPath,
+      });
+      return;
+    }
     const fullPrompt = substituteVariables(prompt.prompt, variables);
     await incrementUsageCount(prompt.id);
     await launchClaudeCode({
-      projectPath: context.projectPath,
+      projectPath: targetPath,
       prompt: fullPrompt,
     });
     await popToRoot();
@@ -236,23 +251,28 @@ function PromptItem({
                 onAction={() => runInTerminal()}
               />
             )}
-            {prompt.variables.length > 0 ? (
-              <Action.Push
-                title="Quick Execute in Raycast"
-                icon={Icon.Play}
-                shortcut={{ modifiers: ["cmd"], key: "e" }}
-                target={<PromptVariablesForm prompt={prompt} mode="raycast" />}
-              />
-            ) : (
-              <Action
-                title="Quick Execute in Raycast"
-                icon={Icon.Play}
-                shortcut={{ modifiers: ["cmd"], key: "e" }}
-                onAction={async () => {
-                  push(<ExecutingPromptView prompt={prompt} variables={{}} />);
-                }}
-              />
-            )}
+            {!prompt.terminalOnly &&
+              (prompt.variables.length > 0 ? (
+                <Action.Push
+                  title="Quick Execute in Raycast"
+                  icon={Icon.Play}
+                  shortcut={{ modifiers: ["cmd"], key: "e" }}
+                  target={
+                    <PromptVariablesForm prompt={prompt} mode="raycast" />
+                  }
+                />
+              ) : (
+                <Action
+                  title="Quick Execute in Raycast"
+                  icon={Icon.Play}
+                  shortcut={{ modifiers: ["cmd"], key: "e" }}
+                  onAction={async () => {
+                    push(
+                      <ExecutingPromptView prompt={prompt} variables={{}} />,
+                    );
+                  }}
+                />
+              ))}
             <Action.Push
               title="View Prompt"
               icon={Icon.Eye}
@@ -399,9 +419,11 @@ function PromptVariablesForm({
       }
     }
 
-    // Check if all required variables are provided (skip optional path variables)
+    // Check if all required variables are provided
+    // For ralph-loop, projectPath is required; for others, path variables are optional
+    const isRalphLoop = prompt.id === "ralph-loop";
     for (const variable of prompt.variables) {
-      const isOptionalPath = variable.type === "path";
+      const isOptionalPath = variable.type === "path" && !isRalphLoop;
       if (
         !processedValues[variable.name]?.trim() &&
         !variable.default &&
@@ -415,13 +437,73 @@ function PromptVariablesForm({
       }
     }
 
+    // Special handling for ralph-loop - create project directory if needed
+    if (isRalphLoop) {
+      const projectPath = processedValues.projectPath;
+      if (projectPath && !existsSync(projectPath)) {
+        try {
+          mkdirSync(projectPath, { recursive: true });
+          await showToast({
+            style: Toast.Style.Success,
+            title: `Created directory: ${projectPath}`,
+          });
+        } catch (error) {
+          await showToast({
+            style: Toast.Style.Failure,
+            title: "Failed to create directory",
+            message: error instanceof Error ? error.message : String(error),
+          });
+          return;
+        }
+      }
+    }
+
     if (mode === "terminal") {
       // Run in terminal
       const context = await captureContext();
-      const fullPrompt = substituteVariables(prompt.prompt, processedValues);
       await incrementUsageCount(prompt.id);
       // Use user-specified projectPath if provided, otherwise fall back to context
       const targetPath = processedValues.projectPath || context.projectPath;
+
+      // Special handling for Ralph Loop - use fresh context launcher
+      if (isRalphLoop) {
+        if (!targetPath) {
+          await showToast({
+            style: Toast.Style.Failure,
+            title: "Project path required for Ralph Loop",
+          });
+          return;
+        }
+
+        // Show animated loading toast while preparing Ralph Loop
+        const loadingToast = await showToast({
+          style: Toast.Style.Animated,
+          title: "Preparing Ralph Loop...",
+          message: "Please wait for terminal to launch",
+        });
+
+        try {
+          await launchRalphFreshLoop({
+            projectPath: targetPath,
+            task: processedValues.task || "",
+            requirements: processedValues.requirements || "",
+            maxIterations: parseInt(processedValues.maxIterations || "20", 10),
+          });
+          loadingToast.style = Toast.Style.Success;
+          loadingToast.title = "Ralph Loop launched";
+          loadingToast.message = undefined;
+          await popToRoot();
+        } catch (error) {
+          loadingToast.style = Toast.Style.Failure;
+          loadingToast.title = "Failed to launch Ralph Loop";
+          loadingToast.message =
+            error instanceof Error ? error.message : String(error);
+        }
+        return;
+      }
+
+      // Regular prompt execution
+      const fullPrompt = substituteVariables(prompt.prompt, processedValues);
       await launchClaudeCode({
         projectPath: targetPath,
         prompt: fullPrompt,
@@ -451,7 +533,20 @@ function PromptVariablesForm({
       <Form.Description title="Prompt" text={prompt.name} />
 
       {prompt.variables.map((variable) => {
-        // For path type variables (like projectPath), show FilePicker
+        // For ralph-loop projectPath, use TextField so user can enter new paths
+        if (prompt.id === "ralph-loop" && variable.name === "projectPath") {
+          return (
+            <Form.TextField
+              key={variable.name}
+              id={variable.name}
+              title={formatVariableName(variable.name)}
+              placeholder="/path/to/project"
+              info={variable.description}
+            />
+          );
+        }
+
+        // For other path type variables, show FilePicker
         if (variable.type === "path") {
           return (
             <Form.FilePicker
@@ -551,6 +646,21 @@ function PromptVariablesForm({
           );
         }
 
+        // For multiline text variables, use larger TextArea
+        if (variable.multiline) {
+          return (
+            <Form.TextArea
+              key={variable.name}
+              id={variable.name}
+              title={formatVariableName(variable.name)}
+              placeholder={variable.description}
+              defaultValue={variable.default}
+              info={variable.description}
+              enableMarkdown={false}
+            />
+          );
+        }
+
         // Default to text field
         return (
           <Form.TextField
@@ -592,6 +702,13 @@ function ExecutingPromptView({
 
     async function execute() {
       try {
+        // Check if Claude is installed first
+        if (!(await ensureClaudeInstalled())) {
+          setError("Claude Code not installed");
+          setIsLoading(false);
+          return;
+        }
+
         // Get project context
         const context = await captureContext();
         setProjectPath(context.projectPath);

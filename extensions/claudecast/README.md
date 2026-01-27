@@ -1,21 +1,21 @@
-# ClaudeCast
+<p align="center">
+  <img src="assets/command-icon.png" alt="ClaudeCast Icon" width="128" height="128">
+</p>
 
-**Claude Code workflows at your fingertips** - A comprehensive Raycast extension that bridges Claude Code's powerful agentic CLI with Raycast's instant-access UI.
+<h1 align="center">ClaudeCast</h1>
+
+<p align="center">
+  <strong>Claude Code workflows at your fingertips</strong><br>
+  A comprehensive Raycast extension that bridges Claude Code's powerful agentic CLI with Raycast's instant-access UI.
+</p>
+
+![ClaudeCast Main Menu](metadata/claudecast-10.png)
+
+---
 
 ## Features
 
-### Phase 1: Core Features
-
-#### Ask Claude Code
-Quick prompt with automatic context capture from VS Code. Select text anywhere, hit the hotkey, and get answers without opening a terminal.
-
-- Auto-detects current project from VS Code
-- Captures selected text and clipboard
-- Shows git branch context
-- Supports all Claude models (Sonnet, Opus, Haiku)
-- Continue conversation in terminal
-
-#### Launch Project
+### Launch Project
 Fast project switching for Claude Code. Browse all your projects with favorites, recents, and session counts.
 
 - Discovers projects from Claude Code history
@@ -24,7 +24,7 @@ Fast project switching for Claude Code. Browse all your projects with favorites,
 - Open in VS Code or Finder
 - Manage favorites
 
-#### Browse Sessions
+### Browse Sessions
 Find and resume any Claude Code conversation across all projects.
 
 - Search sessions by content
@@ -33,22 +33,10 @@ Find and resume any Claude Code conversation across all projects.
 - Resume, fork, or delete sessions
 - See cost and token usage per session
 
-#### Quick Continue
-One keystroke to continue your last Claude Code session. No UI - just launches directly.
-
-#### Git Actions
-Git-aware Claude Code workflows for common tasks.
-
-- Review staged changes
-- Generate commit messages
-- Explain recent diffs
-- Review unstaged changes
-- Summarize branch changes
-
-### Phase 2: Power User Features
-
-#### Prompt Library
+### Agentic Workflows
 Curated collection of production-tested prompts with variable substitution.
+
+![Agentic Workflows - Categories](metadata/claudecast-8.png)
 
 **Categories:**
 - Planning & Architecture
@@ -59,8 +47,52 @@ Curated collection of production-tested prompts with variable substitution.
 - Documentation
 - Advanced Multi-Step Workflows
 
-#### Transform Selection
+![Agentic Workflows - More Prompts](metadata/claudecast-9.png)
+
+### Ralph Loop
+Autonomous agentic execution that breaks down complex tasks and runs them with fresh context per iteration.
+
+![Ralph Loop](metadata/claudecast-1.png)
+
+**How it works:**
+1. Describe your task and requirements
+2. Claude creates a plan with atomic, self-contained tasks
+3. Each task runs in a fresh Claude session (~176K tokens available)
+4. Watch Claude work with full TUI visibility
+5. Resume anytime if max iterations reached
+
+**Features:**
+- Fresh context per task prevents degradation at high token counts
+- Full terminal UI visibility during execution
+- Graceful stop with `touch .ralph/stop`
+- Resume with `bash .ralph/resume.sh 10`
+
+### Git Actions
+Git-aware Claude Code workflows for common tasks.
+
+![Git Actions Menu](metadata/claudecast-7.png)
+
+- Review staged changes
+- Generate commit messages
+- Explain recent diffs
+- Review unstaged changes
+- Summarize branch changes
+
+![Git Actions Result](metadata/claudecast-6.png)
+
+### Ask Claude Code
+Quick prompt with automatic context capture from VS Code. Select text anywhere, hit the hotkey, and get answers without opening a terminal.
+
+- Auto-detects current project from VS Code
+- Captures selected text and clipboard
+- Shows git branch context
+- Supports all Claude models (Sonnet, Opus, Haiku)
+- Continue conversation in terminal
+
+### Transform Selection
 One-keystroke code transformations from any app.
+
+![Transform Selection Menu](metadata/claudecast-3.png)
 
 - Explain code
 - Explain regex
@@ -71,14 +103,19 @@ One-keystroke code transformations from any app.
 - Add comments
 - Write tests
 
-#### Menu Bar Monitor
+![Transform Selection Result](metadata/claudecast-5.png)
+
+### Quick Continue
+One keystroke to continue your last Claude Code session. No UI - just launches directly.
+
+### Menu Bar Monitor
 Real-time Claude Code status in your menu bar.
 
 - Active session indicator
 - Today's cost and session count
 - Quick access to all commands
 
-#### Usage Dashboard
+### Usage Dashboard
 Detailed cost and usage metrics.
 
 - Daily/weekly/monthly trends
@@ -146,7 +183,7 @@ Set these in Raycast preferences:
 | Browse Sessions | `⌘⌥S` |
 | Launch Project | `⌘⌥L` |
 | Git Actions | `⌘⇧G` |
-| Prompt Library | `⌘⌥P` |
+| Agentic Workflows | `⌘⌥P` |
 | Transform Selection | `⌘⇧T` |
 
 ### Tips
@@ -154,7 +191,7 @@ Set these in Raycast preferences:
 1. **Context Capture**: For best results, select code in VS Code before triggering Ask Claude Code
 2. **Project Detection**: Keep VS Code open in your project for automatic project detection
 3. **Quick Continue**: Use this when you step away and want to resume your last conversation
-4. **Prompt Library**: Start with built-in prompts, then create custom ones for your workflows
+4. **Agentic Workflows**: Start with built-in prompts, then create custom ones for your workflows
 5. **Git Actions**: Stage your changes first, then use "Write Commit Message" for AI-generated commits
 
 ## Development
@@ -186,7 +223,7 @@ claude-cast/
 │   ├── launch-project.tsx      # Project Launcher
 │   ├── quick-continue.tsx      # Quick Continue
 │   ├── git-actions.tsx         # Git Actions
-│   ├── prompt-library.tsx      # Prompt Library
+│   ├── prompt-library.tsx      # Agentic Workflows
 │   ├── transform-selection.tsx # Transform Selection
 │   ├── menu-bar-monitor.tsx    # Menu Bar Monitor
 │   ├── usage-dashboard.tsx     # Usage Dashboard

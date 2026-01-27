@@ -12,6 +12,7 @@ import {
   popToRoot,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
+import { existsSync } from "fs";
 import {
   listAllSessions,
   getSessionDetail,
@@ -20,6 +21,7 @@ import {
   SessionDetail,
 } from "./lib/session-parser";
 import { launchClaudeCode } from "./lib/terminal";
+import { ensureClaudeInstalled } from "./lib/claude-cli";
 
 export default function BrowseSessions() {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +31,16 @@ export default function BrowseSessions() {
   async function loadSessions() {
     setIsLoading(true);
     const allSessions = await listAllSessions();
-    setSessions(allSessions);
+    // Deduplicate sessions by ID (same session can exist across multiple project directories)
+    // Keep the most recent one when duplicates exist
+    const seenIds = new Map<string, SessionMetadata>();
+    for (const session of allSessions) {
+      const existing = seenIds.get(session.id);
+      if (!existing || session.lastModified > existing.lastModified) {
+        seenIds.set(session.id, session);
+      }
+    }
+    setSessions(Array.from(seenIds.values()));
     setIsLoading(false);
   }
 
@@ -138,6 +149,15 @@ function SessionItem({
   });
 
   async function handleResume() {
+    if (!(await ensureClaudeInstalled())) return;
+    if (!existsSync(session.projectPath)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: session.projectPath,
+      });
+      return;
+    }
     await launchClaudeCode({
       projectPath: session.projectPath,
       sessionId: session.id,
@@ -146,6 +166,15 @@ function SessionItem({
   }
 
   async function handleFork() {
+    if (!(await ensureClaudeInstalled())) return;
+    if (!existsSync(session.projectPath)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: session.projectPath,
+      });
+      return;
+    }
     await launchClaudeCode({
       projectPath: session.projectPath,
       sessionId: session.id,
@@ -300,6 +329,15 @@ function SessionDetailView({
             title="Resume Session"
             icon={Icon.ArrowRight}
             onAction={async () => {
+              if (!(await ensureClaudeInstalled())) return;
+              if (!existsSync(projectPath)) {
+                await showToast({
+                  style: Toast.Style.Failure,
+                  title: "Project path no longer exists",
+                  message: projectPath,
+                });
+                return;
+              }
               await launchClaudeCode({
                 projectPath,
                 sessionId,
@@ -311,6 +349,15 @@ function SessionDetailView({
             title="Fork Session"
             icon={Icon.ArrowNe}
             onAction={async () => {
+              if (!(await ensureClaudeInstalled())) return;
+              if (!existsSync(projectPath)) {
+                await showToast({
+                  style: Toast.Style.Failure,
+                  title: "Project path no longer exists",
+                  message: projectPath,
+                });
+                return;
+              }
               await launchClaudeCode({
                 projectPath,
                 sessionId,

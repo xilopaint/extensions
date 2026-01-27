@@ -19,6 +19,8 @@ export interface PromptVariable {
   allowRepositoryPath?: boolean;
   /** For path variables: whether to allow directory selection (default: true) */
   allowDirectories?: boolean;
+  /** For text variables: render as multiline TextArea instead of single-line TextField */
+  multiline?: boolean;
 }
 
 export interface PromptTemplate {
@@ -34,6 +36,8 @@ export interface PromptTemplate {
   isBuiltIn: boolean;
   icon?: Icon;
   tintColor?: Color;
+  /** If true, prompt can only run in terminal (not Raycast API mode) */
+  terminalOnly?: boolean;
 }
 
 const CUSTOM_PROMPTS_KEY = "claudecast-custom-prompts";
@@ -2118,6 +2122,50 @@ After completing this guide:
     usageCount: 0,
     icon: Icon.Map,
     tintColor: Color.Green,
+  },
+  {
+    id: "ralph-loop",
+    name: "Ralph Loop",
+    category: "advanced",
+    description:
+      "Autonomous agentic loop that breaks down tasks and executes them with fresh context per iteration. Touch .ralph/stop to halt gracefully.",
+    prompt: "RALPH_FRESH_LOOP", // Special marker - handled by launchRalphFreshLoop()
+    variables: [
+      {
+        name: "projectPath",
+        description:
+          "Project directory (will be created if needed). A .ralph/ folder will be created here.",
+        type: "path",
+        allowDirectories: true,
+      },
+      {
+        name: "task",
+        description:
+          "Describe the task you want Claude to work on autonomously",
+        type: "text",
+        multiline: true, // Render as large TextArea
+      },
+      {
+        name: "requirements",
+        description:
+          "Optional: specific requirements or acceptance criteria (one per line)",
+        type: "text",
+        multiline: true, // Render as TextArea
+      },
+      {
+        name: "maxIterations",
+        description:
+          "Maximum iterations before stopping (safety limit). Can resume with .ralph/resume.sh",
+        default: "20",
+        type: "text",
+      },
+    ],
+    isBuiltIn: true,
+    usageCount: 0,
+    model: "opus",
+    icon: Icon.RotateClockwise,
+    tintColor: Color.Orange,
+    terminalOnly: true,
   },
 ];
 

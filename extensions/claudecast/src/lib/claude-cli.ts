@@ -121,13 +121,19 @@ export async function executePrompt(
     args.push("-r", options.sessionId);
   }
 
-  // Build environment with OAuth token if available
+  // Build environment with authentication
+  // Supports both Anthropic API key (pay-as-you-go) and OAuth token (Claude subscription)
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: `${process.env.PATH}:/usr/local/bin:/opt/homebrew/bin`,
     HOME: os.homedir(),
   };
 
+  // API key takes precedence (direct Anthropic API billing)
+  if (preferences.anthropicApiKey) {
+    env.ANTHROPIC_API_KEY = preferences.anthropicApiKey;
+  }
+  // OAuth token for Claude subscription users
   if (preferences.oauthToken) {
     env.CLAUDE_CODE_OAUTH_TOKEN = preferences.oauthToken;
   }
@@ -285,13 +291,19 @@ export async function executePromptStreaming(
     model,
   ];
 
-  // Build environment with OAuth token if available
+  // Build environment with authentication
+  // Supports both Anthropic API key (pay-as-you-go) and OAuth token (Claude subscription)
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: `${process.env.PATH}:/usr/local/bin:/opt/homebrew/bin`,
     HOME: os.homedir(),
   };
 
+  // API key takes precedence (direct Anthropic API billing)
+  if (preferences.anthropicApiKey) {
+    env.ANTHROPIC_API_KEY = preferences.anthropicApiKey;
+  }
+  // OAuth token for Claude subscription users
   if (preferences.oauthToken) {
     env.CLAUDE_CODE_OAUTH_TOKEN = preferences.oauthToken;
   }
@@ -359,6 +371,32 @@ export async function executePromptStreaming(
 export async function isClaudeInstalled(): Promise<boolean> {
   const path = await getClaudePath();
   return path !== null;
+}
+
+/**
+ * Ensure Claude CLI is installed, showing a toast if not
+ * Returns true if installed, false otherwise
+ */
+export async function ensureClaudeInstalled(): Promise<boolean> {
+  const installed = await isClaudeInstalled();
+  if (!installed) {
+    const { showToast, Toast } = await import("@raycast/api");
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Claude Code not installed",
+      message: "Install: npm install -g @anthropic-ai/claude-code",
+    });
+  }
+  return installed;
+}
+
+/**
+ * Check if authentication is configured (either API key or OAuth token)
+ */
+export async function isAuthConfigured(): Promise<boolean> {
+  const { getPreferenceValues } = await import("@raycast/api");
+  const preferences = getPreferenceValues<Preferences>();
+  return !!(preferences.anthropicApiKey || preferences.oauthToken);
 }
 
 /**

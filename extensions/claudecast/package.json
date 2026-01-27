@@ -78,7 +78,7 @@
     },
     {
       "name": "prompt-library",
-      "title": "Prompt Library",
+      "title": "Agentic Workflows",
       "description": "Curated agentic workflows and prompts",
       "mode": "view",
       "icon": "command-icon.png",
@@ -87,7 +87,9 @@
         "workflows",
         "templates",
         "tdd",
-        "review"
+        "review",
+        "agentic",
+        "ralph"
       ]
     },
     {
@@ -191,9 +193,16 @@
       "required": false
     },
     {
+      "name": "anthropicApiKey",
+      "title": "Anthropic API Key",
+      "description": "Your Anthropic API key for pay-as-you-go billing (console.anthropic.com). Use this OR OAuth Token.",
+      "type": "password",
+      "required": false
+    },
+    {
       "name": "oauthToken",
-      "title": "OAuth Token",
-      "description": "Long-lived OAuth token from 'claude setup-token' (required for Raycast integration)",
+      "title": "OAuth Token (Claude Subscription)",
+      "description": "For Claude Pro/Team subscribers: Run 'claude setup-token' in terminal and paste the token here.",
       "type": "password",
       "required": false
     }

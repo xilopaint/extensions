@@ -99,6 +99,7 @@ export async function listSessionFiles(
 
 /**
  * Parse the first few lines of a JSONL session file to get metadata
+ * Uses proper stream cleanup to prevent memory leaks
  */
 async function parseSessionMetadataFast(
   filePath: string,
@@ -108,11 +109,36 @@ async function parseSessionMetadataFast(
     let lineCount = 0;
     let turnCount = 0;
     let totalCost = 0;
+    let resolved = false;
 
-    const stream = fs.createReadStream(filePath, { encoding: "utf8" });
-    const rl = readline.createInterface({ input: stream });
+    // Helper to safely resolve only once and clean up
+    const safeResolve = () => {
+      if (resolved) return;
+      resolved = true;
+      result.turnCount = turnCount;
+      result.cost = totalCost;
+      resolve(result);
+    };
+
+    const stream = fs.createReadStream(filePath, {
+      encoding: "utf8",
+      // Limit buffer size to reduce memory usage
+      highWaterMark: 16 * 1024, // 16KB instead of default 64KB
+    });
+    const rl = readline.createInterface({
+      input: stream,
+      crlfDelay: Infinity,
+    });
+
+    const cleanup = () => {
+      rl.removeAllListeners();
+      stream.removeAllListeners();
+      rl.close();
+      stream.destroy();
+    };
 
     rl.on("line", (line) => {
+      if (resolved) return;
       lineCount++;
 
       try {
@@ -148,27 +174,28 @@ async function parseSessionMetadataFast(
           result.model = entry.model;
         }
       } catch {
-        // Log parse failures for debugging but continue processing
-        console.warn(
-          `Failed to parse metadata line in ${filePath}: ${line.substring(0, 100)}...`,
-        );
+        // Skip unparseable lines silently to avoid memory accumulation from console.warn
       }
 
-      // Read enough lines for metadata
-      if (lineCount > 50) {
-        rl.close();
-        stream.destroy();
+      // Read enough lines for metadata, then cleanup immediately
+      if (lineCount >= 50) {
+        cleanup();
+        safeResolve();
       }
     });
 
     rl.on("close", () => {
-      result.turnCount = turnCount;
-      result.cost = totalCost;
-      resolve(result);
+      safeResolve();
     });
 
     rl.on("error", () => {
-      resolve(result);
+      cleanup();
+      safeResolve();
+    });
+
+    stream.on("error", () => {
+      cleanup();
+      safeResolve();
     });
   });
 }
@@ -279,11 +306,8 @@ async function parseFullSession(
         if (entry.model) {
           model = entry.model;
         }
-      } catch (e) {
-        // Log parse failures for debugging but continue processing
-        console.warn(
-          `Failed to parse session line in ${filePath}: ${line.substring(0, 100)}...`,
-        );
+      } catch {
+        // Skip unparseable lines silently to avoid memory accumulation
       }
     });
 
@@ -317,10 +341,25 @@ async function parseFullSession(
 
 /**
  * List all sessions across all projects
+ * @param options.limit - Maximum number of sessions to return (for memory optimization)
+ * @param options.afterDate - Only include sessions modified after this date
  */
-export async function listAllSessions(): Promise<SessionMetadata[]> {
+export async function listAllSessions(options?: {
+  limit?: number;
+  afterDate?: Date;
+}): Promise<SessionMetadata[]> {
   const sessions: SessionMetadata[] = [];
   const projectDirs = await listProjectDirs();
+  const afterDate = options?.afterDate;
+  const limit = options?.limit;
+
+  // First, collect all file paths with their modification times
+  // This is faster than parsing each file
+  const fileInfos: Array<{
+    filePath: string;
+    projectDir: string;
+    mtime: Date;
+  }> = [];
 
   for (const projectDir of projectDirs) {
     const sessionFiles = await listSessionFiles(projectDir);
@@ -330,31 +369,55 @@ export async function listAllSessions(): Promise<SessionMetadata[]> {
 
       try {
         const stat = await fs.promises.stat(filePath);
-        const metadata = await parseSessionMetadataFast(filePath);
-        const projectPath = decodeProjectPath(projectDir);
 
-        sessions.push({
-          id: metadata.id || path.basename(sessionFile, ".jsonl"),
+        // Skip files older than afterDate if specified
+        if (afterDate && stat.mtime < afterDate) {
+          continue;
+        }
+
+        fileInfos.push({
           filePath,
-          projectPath,
-          projectName: getProjectName(projectPath),
-          summary: metadata.summary || "",
-          firstMessage: metadata.firstMessage || "",
-          lastModified: stat.mtime,
-          turnCount: metadata.turnCount || 0,
-          cost: metadata.cost || 0,
-          model: metadata.model,
+          projectDir,
+          mtime: stat.mtime,
         });
       } catch {
-        // Skip files we can't read
+        // Skip files we can't stat
       }
     }
   }
 
-  // Sort by last modified (most recent first)
-  return sessions.sort(
-    (a, b) => b.lastModified.getTime() - a.lastModified.getTime(),
-  );
+  // Sort by modification time (most recent first) before parsing
+  // This way we can stop early if we have a limit
+  fileInfos.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+  // Apply limit to reduce the number of files we need to parse
+  const filesToParse = limit ? fileInfos.slice(0, limit) : fileInfos;
+
+  // Now parse only the files we need
+  for (const { filePath, projectDir, mtime } of filesToParse) {
+    try {
+      const metadata = await parseSessionMetadataFast(filePath);
+      const projectPath = decodeProjectPath(projectDir);
+
+      sessions.push({
+        id: metadata.id || path.basename(filePath, ".jsonl"),
+        filePath,
+        projectPath,
+        projectName: getProjectName(projectPath),
+        summary: metadata.summary || "",
+        firstMessage: metadata.firstMessage || "",
+        lastModified: mtime,
+        turnCount: metadata.turnCount || 0,
+        cost: metadata.cost || 0,
+        model: metadata.model,
+      });
+    } catch {
+      // Skip files we can't read
+    }
+  }
+
+  // Already sorted, just return
+  return sessions;
 }
 
 /**
@@ -372,9 +435,10 @@ export async function listProjectSessions(
 
 /**
  * Get the most recent session
+ * Optimized to only load one session
  */
 export async function getMostRecentSession(): Promise<SessionMetadata | null> {
-  const sessions = await listAllSessions();
+  const sessions = await listAllSessions({ limit: 1 });
   return sessions[0] || null;
 }
 

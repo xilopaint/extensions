@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { LocalStorage } from "@raycast/api";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -7,7 +8,7 @@ import {
   listProjectDirs,
   decodeProjectPath,
   getMostRecentSession,
-  listProjectSessions,
+  listSessionFiles,
 } from "./session-parser";
 import { parseVSCodeWorkspaces } from "./vscode-storage";
 
@@ -94,6 +95,7 @@ export async function addRecentProject(projectPath: string): Promise<void> {
 
 /**
  * Discover projects from Claude Code's project directories
+ * Optimized to avoid loading full session details - only counts files
  */
 export async function discoverClaudeProjects(): Promise<Project[]> {
   const projectDirs = await listProjectDirs();
@@ -104,9 +106,43 @@ export async function discoverClaudeProjects(): Promise<Project[]> {
     const projectPath = decodeProjectPath(encodedPath);
     const projectName = path.basename(projectPath) || projectPath;
 
-    // Get session count and last accessed
-    const sessions = await listProjectSessions(projectPath);
-    const lastAccessed = sessions[0]?.lastModified;
+    // Get session count efficiently by just listing files (no parsing)
+    const sessionFiles = await listSessionFiles(encodedPath);
+    const sessionCount = sessionFiles.length;
+
+    // Get last modified time from the most recent session file (by file stat, no parsing)
+    let lastAccessed: Date | undefined;
+    if (sessionCount > 0) {
+      try {
+        const claudeProjectsDir = path.join(
+          os.homedir(),
+          ".claude",
+          "projects",
+          encodedPath,
+        );
+        // Get stats for a few session files and find the most recent
+        const stats = await Promise.all(
+          sessionFiles.slice(0, 10).map(async (file) => {
+            try {
+              const stat = await fs.promises.stat(
+                path.join(claudeProjectsDir, file),
+              );
+              return stat.mtime;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const validStats = stats.filter((s): s is Date => s !== null);
+        if (validStats.length > 0) {
+          lastAccessed = new Date(
+            Math.max(...validStats.map((d) => d.getTime())),
+          );
+        }
+      } catch {
+        // Couldn't get file stats
+      }
+    }
 
     // Check if the directory actually exists on disk
     let exists = false;
@@ -117,13 +153,13 @@ export async function discoverClaudeProjects(): Promise<Project[]> {
       exists = false;
     }
 
-    if (exists || sessions.length > 0) {
+    if (exists || sessionCount > 0) {
       projects.push({
         path: projectPath,
         name: projectName,
         isFavorite: favorites.includes(projectPath),
         lastAccessed,
-        sessionCount: sessions.length,
+        sessionCount,
       });
     }
   }

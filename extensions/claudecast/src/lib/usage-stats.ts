@@ -17,6 +17,15 @@ export interface DailyStats {
 const STATS_CACHE_KEY = "claudecast-stats-cache";
 const STATS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
+// In-memory cache for today's stats to prevent repeated disk reads
+// This is especially important for menu bar monitors that refresh frequently
+let todayStatsCache: {
+  stats: UsageStats;
+  timestamp: number;
+  date: string;
+} | null = null;
+const TODAY_STATS_CACHE_TTL = 30 * 1000; // 30 seconds
+
 interface CachedStats {
   stats: UsageStats;
   timestamp: number;
@@ -24,29 +33,47 @@ interface CachedStats {
 
 /**
  * Get usage statistics for today
+ * Uses in-memory caching to prevent repeated disk reads (important for menu bar)
+ * Also uses date filtering to only parse today's session files
  */
 export async function getTodayStats(): Promise<UsageStats> {
-  const allSessions = await listAllSessions();
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
 
-  const todaySessions = allSessions.filter((s) => s.lastModified >= today);
+  // Check in-memory cache
+  if (
+    todayStatsCache &&
+    todayStatsCache.date === todayStr &&
+    Date.now() - todayStatsCache.timestamp < TODAY_STATS_CACHE_TTL
+  ) {
+    return todayStatsCache.stats;
+  }
 
-  return calculateStats(todaySessions);
+  // Only load sessions modified today - much more efficient
+  const todaySessions = await listAllSessions({ afterDate: today });
+  const stats = calculateStats(todaySessions);
+
+  // Update in-memory cache
+  todayStatsCache = {
+    stats,
+    timestamp: Date.now(),
+    date: todayStr,
+  };
+
+  return stats;
 }
 
 /**
  * Get usage statistics for this week
  */
 export async function getWeekStats(): Promise<UsageStats> {
-  const allSessions = await listAllSessions();
-
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   weekAgo.setHours(0, 0, 0, 0);
 
-  const weekSessions = allSessions.filter((s) => s.lastModified >= weekAgo);
+  // Only load sessions from the past week
+  const weekSessions = await listAllSessions({ afterDate: weekAgo });
 
   return calculateStats(weekSessions);
 }
@@ -55,13 +82,12 @@ export async function getWeekStats(): Promise<UsageStats> {
  * Get usage statistics for this month
  */
 export async function getMonthStats(): Promise<UsageStats> {
-  const allSessions = await listAllSessions();
-
   const monthAgo = new Date();
   monthAgo.setMonth(monthAgo.getMonth() - 1);
   monthAgo.setHours(0, 0, 0, 0);
 
-  const monthSessions = allSessions.filter((s) => s.lastModified >= monthAgo);
+  // Only load sessions from the past month
+  const monthSessions = await listAllSessions({ afterDate: monthAgo });
 
   return calculateStats(monthSessions);
 }
@@ -105,9 +131,16 @@ export async function invalidateStatsCache(): Promise<void> {
 
 /**
  * Get daily stats for the last N days
+ * Optimized to only load sessions from the requested time range
  */
 export async function getDailyStats(days: number = 7): Promise<DailyStats[]> {
-  const allSessions = await listAllSessions();
+  // Calculate the earliest date we need
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days + 1);
+  startDate.setHours(0, 0, 0, 0);
+
+  // Only load sessions from the requested period
+  const allSessions = await listAllSessions({ afterDate: startDate });
 
   const dailyStats: DailyStats[] = [];
 

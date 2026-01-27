@@ -10,6 +10,8 @@ import {
   popToRoot,
 } from "@raycast/api";
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { existsSync } from "fs";
+import { ensureClaudeInstalled } from "./lib/claude-cli";
 import {
   getAllProjects,
   addFavorite,
@@ -208,12 +210,30 @@ function ProjectItem({
   }
 
   async function handleLaunch() {
+    if (!(await ensureClaudeInstalled())) return;
+    if (!existsSync(project.path)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: project.path,
+      });
+      return;
+    }
     await addRecentProject(project.path);
     await launchClaudeCode({ projectPath: project.path });
     await popToRoot();
   }
 
   async function handleContinue() {
+    if (!(await ensureClaudeInstalled())) return;
+    if (!existsSync(project.path)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: project.path,
+      });
+      return;
+    }
     await addRecentProject(project.path);
     await launchClaudeCode({
       projectPath: project.path,
@@ -307,6 +327,16 @@ function ContinueWithPromptForm({ project }: { project: Project }) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Please enter a prompt",
+      });
+      return;
+    }
+
+    if (!(await ensureClaudeInstalled())) return;
+    if (!existsSync(project.path)) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Project path no longer exists",
+        message: project.path,
       });
       return;
     }

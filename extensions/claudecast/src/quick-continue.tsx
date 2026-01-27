@@ -1,14 +1,19 @@
 import { showToast, Toast, showHUD } from "@raycast/api";
+import { existsSync } from "fs";
 import { getMostRecentProject } from "./lib/project-discovery";
 import { getMostRecentSession } from "./lib/session-parser";
 import { launchClaudeCode } from "./lib/terminal";
+import { ensureClaudeInstalled } from "./lib/claude-cli";
 
 export default async function QuickContinue() {
   try {
+    // Check if Claude is installed first
+    if (!(await ensureClaudeInstalled())) return;
+
     // First try to get the most recent session
     const recentSession = await getMostRecentSession();
 
-    if (recentSession) {
+    if (recentSession && existsSync(recentSession.projectPath)) {
       await showHUD(`Continuing session in ${recentSession.projectName}...`);
       await launchClaudeCode({
         projectPath: recentSession.projectPath,
@@ -20,7 +25,7 @@ export default async function QuickContinue() {
     // Fall back to most recent project
     const recentProject = await getMostRecentProject();
 
-    if (recentProject) {
+    if (recentProject && existsSync(recentProject.path)) {
       await showHUD(`Starting new session in ${recentProject.name}...`);
       await launchClaudeCode({
         projectPath: recentProject.path,
