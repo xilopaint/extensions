@@ -523,6 +523,7 @@
 /extensions/diff-checker                                            @Destiner
 /extensions/diff-view                                               @kalaschnik
 /extensions/dig                                                     @danielbahl @pernielsentikaer @j3lte
+/extensions/digger                                                  @chrismessina
 /extensions/digitalocean                                            @ShukantPal @xmok @scoop
 /extensions/directadmin-reseller                                    @xmok
 /extensions/directus                                                @bryantgillespie
