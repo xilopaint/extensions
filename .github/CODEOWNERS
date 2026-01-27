@@ -1415,7 +1415,7 @@
 /extensions/nightscout                                              @zachsea
 /extensions/nippon-colors                                           @nagauta
 /extensions/nix-flake-templates                                     @lex-unix
-/extensions/nixpkgs-search                                          @aiotter @xmok @0xdhrv
+/extensions/nixpkgs-search                                          @aiotter @xmok @0xdhrv @SConaway
 /extensions/nl-news-headlines                                       @namzo
 /extensions/nmbs-planner                                            @SamuelVanhaecke @0xdhrv
 /extensions/no-as-a-service                                         @matholamew
