@@ -5,7 +5,7 @@ import { Icon } from "@raycast/api";
  */
 export interface Arena {
   id: string;
-  name: string;
+  label: string;
   icon: Icon;
   link: string;
 }
@@ -16,43 +16,50 @@ export interface Arena {
 export const ARENAS_BY_SECTION = new Map<string, Arena[]>([
   [
     "Chat Arena",
-    [{ id: "chat-arena", name: "Chat", icon: Icon.Message, link: "https://llm-stats.com/arenas/llm-arena/chat-arena" }],
+    [
+      {
+        id: "chat-arena",
+        label: "Chat",
+        icon: Icon.Message,
+        link: "https://llm-stats.com/arenas/llm-arena/chat-arena",
+      },
+    ],
   ],
   [
     "Coding Arena",
     [
       {
         id: "text-to-website",
-        name: "Website",
+        label: "Website",
         icon: Icon.Globe,
         link: "https://llm-stats.com/arenas/coding-arena/text-to-website",
       },
-      { id: "threejs", name: "3D", icon: Icon.Box, link: "https://llm-stats.com/arenas/coding-arena/threejs" },
+      { id: "threejs", label: "3D", icon: Icon.Box, link: "https://llm-stats.com/arenas/coding-arena/threejs" },
       {
         id: "text-to-game",
-        name: "Game",
+        label: "Game",
         icon: Icon.GameController,
         link: "https://llm-stats.com/arenas/coding-arena/text-to-game",
       },
       {
         id: "p5-animation",
-        name: "Animation",
+        label: "Animation",
         icon: Icon.Brush,
         link: "https://llm-stats.com/arenas/coding-arena/p5-animation",
       },
       {
         id: "text-to-svg",
-        name: "Text to SVG",
+        label: "Text to SVG",
         icon: Icon.Code,
         link: "https://llm-stats.com/arenas/coding-arena/text-to-svg",
       },
       {
         id: "dataviz",
-        name: "Data Visualization",
+        label: "Data Visualization",
         icon: Icon.BarChart,
         link: "https://llm-stats.com/arenas/coding-arena/dataviz",
       },
-      { id: "tonejs", name: "MIDI", icon: Icon.Livestream, link: "https://llm-stats.com/arenas/coding-arena/tonejs" },
+      { id: "tonejs", label: "MIDI", icon: Icon.Livestream, link: "https://llm-stats.com/arenas/coding-arena/tonejs" },
     ],
   ],
   [
@@ -60,13 +67,13 @@ export const ARENAS_BY_SECTION = new Map<string, Arena[]>([
     [
       {
         id: "text-to-image",
-        name: "Text to Image",
+        label: "Text to Image",
         icon: Icon.Wand,
         link: "https://llm-stats.com/arenas/image-arena/text-to-image",
       },
       {
         id: "image-to-image",
-        name: "Image to Image",
+        label: "Image to Image",
         icon: Icon.Image,
         link: "https://llm-stats.com/arenas/image-arena/image-to-image",
       },
@@ -77,19 +84,19 @@ export const ARENAS_BY_SECTION = new Map<string, Arena[]>([
     [
       {
         id: "text-to-video",
-        name: "Text to Video",
+        label: "Text to Video",
         icon: Icon.Wand,
         link: "https://llm-stats.com/arenas/video-arena/text-to-video",
       },
       {
         id: "image-to-video",
-        name: "Image to Video",
+        label: "Image to Video",
         icon: Icon.Image,
         link: "https://llm-stats.com/arenas/video-arena/image-to-video",
       },
       {
         id: "video-editing",
-        name: "Video Editing",
+        label: "Video Editing",
         icon: Icon.FilmStrip,
         link: "https://llm-stats.com/arenas/video-arena/video-editing",
       },
@@ -100,11 +107,11 @@ export const ARENAS_BY_SECTION = new Map<string, Arena[]>([
     [
       {
         id: "text-to-speech",
-        name: "Text to Speech",
+        label: "Text to Speech",
         icon: Icon.SpeakerHigh,
         link: "https://llm-stats.com/arenas/audio-arena/text-to-speech",
       },
-      { id: "music", name: "Text to Music", icon: Icon.Music, link: "https://llm-stats.com/arenas/audio-arena/music" },
+      { id: "music", label: "Text to Music", icon: Icon.Music, link: "https://llm-stats.com/arenas/audio-arena/music" },
     ],
   ],
   [
@@ -112,7 +119,7 @@ export const ARENAS_BY_SECTION = new Map<string, Arena[]>([
     [
       {
         id: "stock-arena",
-        name: "Stocks",
+        label: "Stocks",
         icon: Icon.LineChart,
         link: "https://llm-stats.com/arenas/trading-arena",
       },
@@ -130,6 +137,20 @@ export function getArenaById(arenaId: string): Arena | undefined {
     const arena = arenas.find((a) => a.id === arenaId);
     if (arena) {
       return arena;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Gets the section name for an arena by its ID
+ * @param arenaId - The arena ID
+ * @returns Section name if found, undefined otherwise
+ */
+export function getArenaSectionName(arenaId: string): string | undefined {
+  for (const [sectionName, arenas] of ARENAS_BY_SECTION) {
+    if (arenas.some((arena) => arena.id === arenaId)) {
+      return sectionName;
     }
   }
   return undefined;
