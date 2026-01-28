@@ -1,6 +1,6 @@
 # LLM Stats Changelog
 
-## [0.1.2] - 2026-01-28
+## [0.1.2] - {PR_MERGE_DATE}
 
 ### Changed
 - Replaced the standalone "Open Arena" list item in the **View LLM Leaderboards** command with an **Open [Arena] in Browser** action on all leaderboard items
