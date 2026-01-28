@@ -3,8 +3,7 @@
 ## [0.1.2] - 2026-01-28
 
 ### Changed
-- Simplified **View LLM Leaderboards** by removing the standalone "Open Arena" list item
-- Added **Open [Arena] in Browser** action to leaderboard items (in the Action Panel, placed last)
+- Replaced the standalone "Open Arena" list item in the **View LLM Leaderboards** command with an **Open [Arena] in Browser** action on all leaderboard items
 - Updated the leaderboard section header to show the selected arena and its category
 
 ## [0.1.1] - 2026-01-19
