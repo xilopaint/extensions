@@ -101,8 +101,10 @@ export async function getVideoTranscript(video: string): Promise<string | undefi
       return undefined;
     }
 
-    // Parse XML - format uses <p> tags (may contain nested <s> etc.)
-    const segments = xml.match(/<p[^>]*>[\s\S]*?<\/p>/g) || [];
+    // YouTube srv3 format uses <s> tags nested inside <p> for text segments
+    const sSegments = xml.match(/<s[^>]*>([^<]*)<\/s>/g) || [];
+    const textSegments = xml.match(/<text[^>]*>([^<]*)<\/text>/g) || [];
+    const segments = sSegments.length > 0 ? sSegments : textSegments;
 
     const transcriptText = segments
       .map((segment: string) => {
@@ -112,8 +114,7 @@ export async function getVideoTranscript(video: string): Promise<string | undefi
           .replace(/\s+/g, " ")
           .trim();
       })
-      .filter(Boolean)
-      .join(" ")
+      .join("")
       // Decode HTML entities
       .replace(/&amp;/g, "&")
       .replace(/&lt;/g, "<")
