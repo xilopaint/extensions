@@ -1,5 +1,9 @@
 # Parcel Changelog
 
+## [Added Windows Support] - 2026-01-29
+
+- Added support for Windows in addition to Mac
+
 ## [Internationalization and Carrier Name Display] - 2026-01-13
 
 - Removed hardcoded locale value introduced in a previous change - dates now display correctly for all international users
