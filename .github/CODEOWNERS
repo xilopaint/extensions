@@ -1710,7 +1710,7 @@
 /extensions/prowlarr                                                @Elcaten
 /extensions/proxmox                                                 @CzBiX @xmok @j3lte
 /extensions/proxyman                                                @NghiaTranUIT
-/extensions/prusa                                                   @chadrwalters
+/extensions/prusa                                                   @chadrwalters @wesbaker
 /extensions/psn                                                     @kylinwowo
 /extensions/public-bug-bounty-and-vulnerability-disclosure-programs @securibee
 /extensions/publora                                                 @T0ha
