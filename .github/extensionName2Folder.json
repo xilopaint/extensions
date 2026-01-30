@@ -450,6 +450,7 @@
   "xeric/currency-exchange": "currency-exchange",
   "degouville/cursor": "cursor",
   "anysphere/cursor-agents": "cursor-agents",
+  "shadeov/cursor-costs": "cursor-costs",
   "escwxyz/cursor-directory": "cursor-directory",
   "degouville/cursor-recent-projects": "cursor-recent-projects",
   "storm/cursors": "cursors",
