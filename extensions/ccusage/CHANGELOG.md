@@ -1,5 +1,11 @@
 # Claude Code Usage (ccusage) Changelog
 
+## [v2.1.1] - 2026-01-30
+
+### Added
+
+- Custom npx path now supports tilde (`~`) expansion for home directory paths
+
 ## [v2.1.0] - 2026-01-27
 
 ### Added
