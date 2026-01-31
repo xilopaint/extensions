@@ -2227,7 +2227,7 @@
 /extensions/tesla                                                   @WilliamWelsh
 /extensions/teslamate                                               @mSarheed
 /extensions/tex2typst                                               @nac-39
-/extensions/text-decorator                                          @koinzhang
+/extensions/text-decorator                                          @koinzhang @xmok
 /extensions/text-differ                                             @fishfisher
 /extensions/text-format-improver                                    @mrgeneralgoo
 /extensions/text-replacements                                       @thomaslombart
