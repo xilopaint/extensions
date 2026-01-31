@@ -54,14 +54,14 @@ export default function Command() {
     );
   }
 
-  // Don't show menu bar when idle
-  if (status?.printer.state.toUpperCase() === "IDLE") {
-    return null;
+  // Handle loading state
+  if (isLoading) {
+    return <MenuBarExtra icon={Icon.CircleProgress} isLoading={true} />;
   }
 
-  // Handle loading state
-  if (isLoading || !status) {
-    return <MenuBarExtra icon={Icon.CircleProgress} isLoading={true} />;
+  // Don't show menu bar when idle or no active job
+  if (!status || !status.job || status.printer.state.toUpperCase() === "IDLE") {
+    return null;
   }
 
   const state = status.printer.state.toUpperCase();
