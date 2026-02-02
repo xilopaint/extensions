@@ -2256,6 +2256,7 @@
 /extensions/tiktoken                                                @Envl
 /extensions/tim                                                     @tmwrnr
 /extensions/time                                                    @devidw
+/extensions/time-awareness                                          @alexibuild
 /extensions/time-calculator                                         @Marceswan
 /extensions/time-converter                                          @alexj
 /extensions/time-logger                                             @aramikuto
