@@ -1529,6 +1529,7 @@
 /extensions/openai-speak                                            @jnchman
 /extensions/openai-translator                                       @douo @dekura @leeonfield @ridemountainpig
 /extensions/openfortivpn                                            @rafalpetryka
+/extensions/openhue                                                 @thibauult
 /extensions/openrouter-model-search                                 @mutewinter @0xdhrv
 /extensions/openrouter-models-finder                                @jeejeeguan @degouville
 /extensions/openrouter-quick-actions                                @HugoGresse
