@@ -684,6 +684,7 @@
 /extensions/ffmpeg                                                  @RenderCoder @blekmus @aagedal @EvanZhouDev @j3lte
 /extensions/fhir                                                    @loris
 /extensions/fibonacci-sequence                                      @adambutler
+/extensions/fifteen-million-merits                                  @alexibuild
 /extensions/figlet                                                  @pernielsentikaer
 /extensions/figma-files                                             @michaelwschultz @pernielsentikaer @GLaDO8
 /extensions/figma-learn-companion                                   @MadMaxMcKinney
