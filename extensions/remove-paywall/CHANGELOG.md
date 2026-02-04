@@ -1,6 +1,6 @@
 # Remove Paywall Changelog
 
-## [12ft.io removal] - {PR_MERGE_DATE}
+## [12ft.io removal] - 2026-02-04
 
 - Removed 12ft.io integration as the service is no longer operational
 
